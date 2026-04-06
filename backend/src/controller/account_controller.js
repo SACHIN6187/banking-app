@@ -16,17 +16,12 @@ async function getAccountInfo(req, res) {
     const account = await accountModal.findOne({
       user: user._id,
     });
-
     if (!account) {
-      return res.status(200).json({ account: null });
+      return res.status(200).json({account: null});
     }
-
-    const transactions = await transactionmodel.find({
-      $or: [
-        { fromAccount: account._id },
-        { toAccount: account._id }
-      ]
-    });
+    const Status = account.status || null;
+    const transactions = await transactionmodel.find(
+        {$or: [{fromAccount: account._id}, {toAccount: account._id}]});
 
     let creditBalance = 0;
     let debitBalance = 0;
@@ -47,13 +42,14 @@ async function getAccountInfo(req, res) {
         totalBalance,
         creditBalance,
         debitBalance,
-        transactions
+        transactions,
+        Status,
       }
     });
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({message: 'Server error'});
   }
 }
 

@@ -1,45 +1,34 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowUpRight, ArrowDownLeft, Search, Filter } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { getAccountApi } from "@/lib/api";
 
 export default function TransactionsPage() {
-  const { token } = useAuth();
-  const [account, setAccount] = useState<any>(null);
+  const { account, isLoading } = useAuth();
+
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "credit" | "debit">("all");
 
+  // ✅ Sync transactions from context
   useEffect(() => {
-    if (!token) return;
+    if (account?.transactions) {
+      setTransactions(account.transactions);
+    } else {
+      setTransactions([]);
+    }
+  }, [account]);
 
-    const fetchData = async () => {
-      try {
-        const data = await getAccountApi(token);
-
-        setAccount(data.account);
-        setTransactions(data.account?.transactions || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [token]);
-
-  // ✅ Keep this (for UI logic)
+  // ✅ Debit check
   const isDebit = (tx: any) =>
     tx.fromAccount === account?._id ||
     tx.fromAccount?._id === account?._id;
 
-  // ✅ Filtering stays
+  // ✅ Filtering
   const filtered = transactions.filter((tx) => {
     const debit = isDebit(tx);
 
@@ -62,13 +51,14 @@ export default function TransactionsPage() {
     Reversed: "outline",
   };
 
-  if (loading)
+  // ✅ Use global loading
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-muted border-t-foreground rounded-full animate-spin" />
+        Loading...
       </div>
     );
-
+  }
   return (
     <div className="max-w-3xl animate-fade-in">
       <div className="mb-8">
@@ -130,17 +120,16 @@ export default function TransactionsPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all
-                ${
-                  filter === f
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                ${filter === f
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               {f === "credit"
                 ? "Received"
                 : f === "debit"
-                ? "Sent"
-                : "All"}
+                  ? "Sent"
+                  : "All"}
             </button>
           ))}
         </div>
@@ -168,10 +157,9 @@ export default function TransactionsPage() {
                 <div
                   key={tx._id}
                   className={`flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition
-                    ${
-                      i !== filtered.length - 1
-                        ? "border-b border-border"
-                        : ""
+                    ${i !== filtered.length - 1
+                      ? "border-b border-border"
+                      : ""
                     }`}
                 >
                   <div className="flex items-center gap-4">
@@ -194,13 +182,13 @@ export default function TransactionsPage() {
                       <p className="text-xs text-muted-foreground font-mono">
                         {debit
                           ? `To: ${(tx.toAccount?._id || tx.toAccount || "")
-                              .toString()
-                              .slice(0, 16)}...`
+                            .toString()
+                            .slice(0, 16)}...`
                           : `From: ${(tx.fromAccount?._id ||
-                              tx.fromAccount ||
-                              "")
-                              .toString()
-                              .slice(0, 16)}...`}
+                            tx.fromAccount ||
+                            "")
+                            .toString()
+                            .slice(0, 16)}...`}
                       </p>
 
                       <p className="text-xs text-muted-foreground">
@@ -211,9 +199,8 @@ export default function TransactionsPage() {
 
                   <div className="text-right flex flex-col items-end gap-1">
                     <p
-                      className={`text-sm font-semibold ${
-                        debit ? "text-red-500" : "text-emerald-600"
-                      }`}
+                      className={`text-sm font-semibold ${debit ? "text-red-500" : "text-emerald-600"
+                        }`}
                     >
                       {debit ? "-" : "+"}₹
                       {Number(tx.amount).toLocaleString("en-IN")}

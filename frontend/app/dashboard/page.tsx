@@ -9,36 +9,27 @@ import { useAuth } from "@/context/AuthContext";
 import { getAccountApi } from "@/lib/api";
 
 export default function DashboardPage() {
-  const { token, user } = useAuth();
-  const [account, setAccount] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { token, user, account, isLoading } = useAuth();
   const [error, setError] = useState("");
 
+
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  // ✅ Sync transactions from context
   useEffect(() => {
-    if (!token) return;
-
-    const fetchData = async () => {
-      try {
-        const data = await getAccountApi(token);
-
-        setAccount(data.account);
-        setTransactions(data.account?.transactions?.slice(0, 5) || []);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    if (account?.transactions) {
+      setTransactions(account.transactions);
+    } else {
+      setTransactions([]);
+    }
   }, [token]);
+
 
   const isDebit = (tx: any) =>
     tx.fromAccount === account?._id ||
     tx.fromAccount?._id === account?._id;
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-2 border-muted border-t-foreground rounded-full animate-spin" />

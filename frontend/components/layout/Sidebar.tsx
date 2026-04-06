@@ -5,20 +5,11 @@ import { LayoutDashboard, ArrowUpRight, ClipboardList, PlusCircle, LogOut, Layer
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { getAccountApi } from "@/lib/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, token } = useAuth();
-  const [account, setAccount] = useState<any>(null);
+  const { user, logout, account } = useAuth();
 
-  useEffect(() => {
-    if (!token) return;
-    getAccountApi(token)
-      .then((res) => setAccount(res.account || res))
-      .catch(() => setAccount(null));
-  }, [token]);
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },

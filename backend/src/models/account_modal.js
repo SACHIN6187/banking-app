@@ -26,15 +26,24 @@ const accountSchema = new mongoose.Schema(
     {timestamps: true})
 accountSchema.index({user: 1, status: 1});
 accountSchema.methods.getBalanceDetails = async function() {
-  const ledgers = await ledgerModel.find({account: this._id});
-  console.log(ledgers);
+  const result = await ledgerModel.aggregate([
+    {$match: {account: this._id}},
+    {
+      $group: {
+        _id: '$type',
+        total: {$sum: '$amount'},
+      },
+    },
+  ]);
+
   let credit = 0;
   let debit = 0;
 
-  for (const ledger of ledgers) {
-    if (ledger.type === 'Credit') credit += ledger.amount;
-    if (ledger.type === 'Debit') debit += ledger.amount;
+  for (const item of result) {
+    if (item._id === 'Credit') credit = item.total;
+    if (item._id === 'Debit') debit = item.total;
   }
+
   return {
     creditBalance: credit,
     debitBalance: debit,

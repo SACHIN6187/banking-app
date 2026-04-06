@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,53 +12,16 @@ import {
 import { CheckCircle2, PlusCircle, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
-import { createAccountApi, getAccountApi } from "@/lib/api";
+import { createAccountApi } from "@/lib/api";
 
 export default function CreateAccountPage() {
-  const { token } = useAuth();
+  const { token, account, isLoading } = useAuth();
 
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [account, setAccount] = useState<any>(null);
   const [error, setError] = useState("");
 
-  // ✅ Check if account already exists
-  useEffect(() => {
-    if (!token) return;
-
-    const checkAccount = async () => {
-      try {
-        const data = await getAccountApi(token);
-        if (data.account) {
-          setAccount(data.account);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setChecking(false);
-      }
-    };
-
-    checkAccount();
-  }, [token]);
-
-  // ✅ Create account
-  const handleCreate = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const data = await createAccountApi(token!);
-      setAccount(data.account || data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Loading while checking account
-  if (checking) {
+  // ✅ Loading state
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         Loading...
@@ -65,6 +29,22 @@ export default function CreateAccountPage() {
     );
   }
 
+  // ✅ Create account
+  const handleCreate = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      await createAccountApi(token!);
+      window.location.reload(); // (optional: can improve later)
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ If account exists → show UI
   if (account) {
     return (
       <div className="max-w-md mx-auto animate-fade-in">
@@ -81,33 +61,32 @@ export default function CreateAccountPage() {
           </CardHeader>
 
           <CardContent className="space-y-6 mt-4">
-
-            {/* 💰 Total Balance */}
+            {/* Balance */}
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl p-5">
               <p className="text-xs opacity-80 mb-1">Total Balance</p>
               <h2 className="text-2xl font-semibold">
-                ₹{account?.totalBalance?.toLocaleString("en-IN") || 0}
+                ₹{account.totalBalance.toLocaleString("en-IN")}
               </h2>
             </div>
 
-            {/* 📊 Credit / Debit */}
+            {/* Credit / Debit */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-emerald-50 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-1">Total Received</p>
                 <p className="text-sm font-semibold text-emerald-600">
-                  +₹{account?.creditBalance?.toLocaleString("en-IN") || 0}
+                  +₹{account.creditBalance.toLocaleString("en-IN")}
                 </p>
               </div>
 
               <div className="bg-red-50 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-1">Total Sent</p>
                 <p className="text-sm font-semibold text-red-500">
-                  -₹{account?.debitBalance?.toLocaleString("en-IN") || 0}
+                  -₹{account.debitBalance.toLocaleString("en-IN")}
                 </p>
               </div>
             </div>
 
-            {/* 🆔 Account ID */}
+            {/* Account ID */}
             <div className="bg-muted rounded-xl p-4">
               <p className="text-xs text-muted-foreground mb-2 uppercase">
                 Account ID
@@ -127,7 +106,7 @@ export default function CreateAccountPage() {
               </div>
             </div>
 
-            {/* 🟢 Status */}
+            {/* Status */}
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Status</span>
               <Badge variant="success">{account.status}</Badge>
@@ -137,62 +116,21 @@ export default function CreateAccountPage() {
       </div>
     );
   }
-  // ✅ If NO account → show create UI
+
+  // ✅ No account → create UI
   return (
     <div className="max-w-md animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Create Account</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Open a new bank account instantly.
-        </p>
-      </div>
+      <h1 className="text-2xl font-semibold mb-4">Create Account</h1>
 
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <PlusCircle className="w-4 h-4" /> New Bank Account
-          </CardTitle>
-          <CardDescription>
-            Your account will be created instantly and ready to use.
-          </CardDescription>
-        </CardHeader>
+      {error && (
+        <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-xl">
+          {error}
+        </div>
+      )}
 
-        <CardContent className="space-y-6">
-          {error && (
-            <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-xl">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {[
-              "Instant account activation",
-              "Send & receive money immediately",
-              "Full transaction history",
-              "Secure & encrypted",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 text-sm text-muted-foreground"
-              >
-                <div className="w-5 h-5 bg-emerald-50 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                </div>
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <Button
-            onClick={handleCreate}
-            className="w-full"
-            size="lg"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </Button>
-        </CardContent>
-      </Card>
+      <Button onClick={handleCreate} className="w-full" size="lg" disabled={loading}>
+        {loading ? "Creating..." : "Create Account"}
+      </Button>
     </div>
   );
 }

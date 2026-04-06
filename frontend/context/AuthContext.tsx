@@ -4,8 +4,22 @@ import { useRouter } from "next/navigation";
 import { saveAuth, getToken, getUser, clearAuth } from "@/lib/auth";
 import { getAccountApi } from "@/lib/api";
 
+interface Transaction {
+  _id: string;
+  fromAccount: string | { _id: string };
+  toAccount: string | { _id: string };
+  amount: number;
+  status: "Completed" | "Pending" | "Failed" | "Reversed";
+  createdAt: string;
+}
+
 interface Account {
   _id: string;
+  creditBalance: number;
+  debitBalance: number;
+  totalBalance: number;
+  transactions: Transaction[];
+  status: string;
 }
 
 interface User {
