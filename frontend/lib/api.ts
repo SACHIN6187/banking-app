@@ -1,6 +1,5 @@
 const BASE_URL = "http://localhost:3000/api";
 
-// ─── Generic fetch helper ────────────────────────────────────────
 async function apiFetch(path: string, options: RequestInit = {}, token?: string) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -14,7 +13,6 @@ async function apiFetch(path: string, options: RequestInit = {}, token?: string)
   return data;
 }
 
-// ─── Auth ────────────────────────────────────────────────────────
 export async function loginApi(email: string, password: string) {
   return apiFetch("/auth/signin", {
     method: "POST",
@@ -34,13 +32,34 @@ export async function getAccountApi(token: string) {
   return apiFetch("/Info", { method: "GET" }, token);
 }
 
+// lib/api.ts
+export async function checkSystemUserApi(token: string) {
+  return apiFetch("/check", { method: "GET" }, token);
+}
 export async function createAccountApi(token: string) {
   return apiFetch("/accounts", { method: "POST" }, token);
 }
 
-// ─── Transactions ────────────────────────────────────────────────
 export async function getTransactionsApi(token: string) {
   return apiFetch("/transactions", { method: "GET" }, token);
+}
+export async function generateFundApi(
+  token: string,
+  toAccount: string,
+  amount: number
+) {
+  return apiFetch(
+    "/transactions/intial-fund",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        toAccount,
+        amount,
+        idempotencyKey: crypto.randomUUID(),
+      }),
+    },
+    token
+  );
 }
 
 export async function sendMoneyApi(

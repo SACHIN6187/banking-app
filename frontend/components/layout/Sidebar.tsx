@@ -5,19 +5,40 @@ import { LayoutDashboard, ArrowUpRight, ClipboardList, PlusCircle, LogOut, Layer
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
+import { checkSystemUserApi } from "@/lib/api";
+import { useState, useEffect } from 'react';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, account } = useAuth();
+  const { user, logout, account, token } = useAuth();
+  const [isSystemUser, setIsSystemUser] = useState(false);
+  useEffect(() => {
+    if (!token) return;
+
+    checkSystemUserApi(token)
+      .then((res) => { console.log("SYSTEM USER RESPONSE:", res.isSystemUser); setIsSystemUser(res.isSystemUser) })
+      .catch(() => setIsSystemUser(false));
+
+  }, [token]);
 
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/send", label: "Send Money", icon: ArrowUpRight },
     { href: "/dashboard/transactions", label: "Transactions", icon: ClipboardList },
+
     account
       ? { href: "/dashboard/create-account", label: "Your Account", icon: Layers }
       : { href: "/dashboard/create-account", label: "Create Account", icon: PlusCircle },
+    ...(isSystemUser
+      ? [
+        {
+          href: "/dashboard/generate-fund",
+          label: "Generate Fund",
+          icon: PlusCircle,
+        },
+      ]
+      : []),
   ];
 
   return (
