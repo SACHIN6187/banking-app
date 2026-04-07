@@ -1,4 +1,4 @@
-const user_modal = require('../models/user_modal');
+const user_modal = require('../models/user_model');
 const jwt = require('jsonwebtoken');
 
 async function authMiddleware(req, res, next) {
@@ -26,6 +26,7 @@ async function authMiddleware(req, res, next) {
 }
 
 async function intialFundtransactionMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
   const token = req.cookies?.token ||
       (authHeader?.startsWith('Bearer ') && authHeader.split(' ')[1]);
   if (!token) {
@@ -35,14 +36,14 @@ async function intialFundtransactionMiddleware(req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await user_modal.findById(decoded.userId).select("+systemUser");
-    if(!user.systemUser){
-      return res.status(403).json({
-        message:"forbidden access,not a system user"
-      })
+    const user =
+        await user_modal.findById(decoded.userId).select('+systemUser');
+    if (!user.systemUser) {
+      return res.status(403).json(
+          {message: 'forbidden access,not a system user'})
     }
     req.user = user;
-     return next();
+    return next();
   } catch (err) {
     return res.status(401).json({
       message: 'Unautharized acess , token is missing',

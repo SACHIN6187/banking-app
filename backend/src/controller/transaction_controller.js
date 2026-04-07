@@ -1,10 +1,10 @@
-const {default: mongoose} = require('mongoose');
+const { mongoose} = require('mongoose');
 const accountModel = require('../models/account_modal')
 const transactionModel = require('../models/transaction_modal')
 const Ledger = require('../models/ledger_modal');
+
 const {sendDebitEmail, sendCreditEmail} =
     require('../services/sendRegistrationEmail');
-const userModel = require('../models/user_modal');
 
 async function transactionController(req, res) {
   const {fromAccount, toAccount, amount, idempotencyKey} = req.body;
@@ -106,67 +106,79 @@ async function transactionController(req, res) {
     session.endSession();
   }
 }
-
 async function createInitialFundsTransaction(req, res) {
-    const { toAccount, amount, idempotencyKey } = req.body
+  try {
+    const {toAccount, amount, idempotencyKey} = req.body;
 
     if (!toAccount || !amount || !idempotencyKey) {
-        return res.status(400).json({
-            message: "toAccount, amount and idempotencyKey are required"
-        })
+      return res.status(400).json({
+        message: 'toAccount, amount and idempotencyKey are required',
+      });
     }
 
-    const toUserAccount = await accountModel.findOne({
-        _id: toAccount,
-    })
+    const existing = await transactionModel.findOne({idempotencyKey});
+    if (existing) {
+      return res.status(200).json({
+        message: 'Transaction already processed',
+        transaction: existing,
+      });
+    }
+
+    const toUserAccount = await accountModel.findOne({_id: toAccount});
 
     if (!toUserAccount) {
-        return res.status(400).json({
-            message: "Invalid toAccount"
-        })
+      return res.status(400).json({message: 'Invalid toAccount'});
     }
 
     const fromUserAccount = await accountModel.findOne({
-        user: req.user._id
-    })
+      user: req.user._id,
+    });
 
     if (!fromUserAccount) {
-        return res.status(400).json({
-            message: "System user account not found"
-        })
+      return res.status(400).json({
+        message: 'System user account not found',
+      });
     }
 
-
-    const session = await mongoose.startSession()
-    session.startTransaction()
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
     const transaction = new transactionModel({
-        fromAccount: fromUserAccount._id,
-        toAccount,
-        amount,
-        idempotencyKey,
-        status: "PENDING"
-    })
+      fromAccount: fromUserAccount._id,
+      toAccount,
+      amount,
+      idempotencyKey,
+      status: 'PENDING',
+    });
 
-     await Ledger.create([ {
-        account: toAccount,
-        amount: amount,
-        transaction: transaction._id,
-        type: "Credit"
-    } ], { session })
+    await Ledger.create(
+        [
+          {
+            account: toAccount,
+            amount: amount,
+            transaction: transaction._id,
+            type: 'Credit',
+          },
+        ],
+        {session});
 
-    transaction.status = "Completed"
-    await transaction.save({ session })
+    transaction.status = 'Completed';
+    await transaction.save({session});
 
-    await session.commitTransaction()
-    session.endSession()
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(201).json({
-        message: "Initial funds transaction completed successfully",
-        transaction: transaction
-    })
+      message: 'Initial funds transaction completed successfully',
+      transaction,
+    });
 
-
+  } catch (err) {
+    console.error('ERROR:', err);  // 🔥 THIS WILL SHOW REAL BUG
+    return res.status(500).json({
+      message: 'Server error',
+    });
+  }
 }
 module.exports = {
   transactionController,

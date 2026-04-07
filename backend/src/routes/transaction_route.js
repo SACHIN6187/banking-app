@@ -11,5 +11,4 @@ transactionRoute.post(
 transactionRoute.post(
     '/intial-fund',intialFundtransactionMiddleware, transactionController.createInitialFundsTransaction);
 
-
 module.exports = transactionRoute;  

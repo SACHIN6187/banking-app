@@ -1,4 +1,4 @@
-const user_modal = require('../models/user_modal');
+const user_modal = require('../models/user_model');
 const jwt = require('jsonwebtoken');
 
 async function transactionMiddleware(req, res, next) {
