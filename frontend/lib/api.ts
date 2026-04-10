@@ -6,7 +6,7 @@ async function apiFetch(path: string, options: RequestInit = {}, token?: string)
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers,credentials: "include", });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Something went wrong");
   return data;
