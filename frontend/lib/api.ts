@@ -1,4 +1,4 @@
-const BASE_URL = "http://172.20.45.55:3000/api";
+const BASE_URL = "https://banking-app-5mlp.onrender.com/api";
 async function apiFetch(path: string, options: RequestInit = {}, token?: string) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
