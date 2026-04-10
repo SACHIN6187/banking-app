@@ -1,5 +1,4 @@
-const BASE_URL = "http://localhost:3000/api";
-
+const BASE_URL = "http://172.20.45.55:3000/api";
 async function apiFetch(path: string, options: RequestInit = {}, token?: string) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -55,7 +54,7 @@ export async function generateFundApi(
       body: JSON.stringify({
         toAccount,
         amount,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       }),
     },
     token
@@ -76,7 +75,7 @@ export async function sendMoneyApi(
         fromAccount,
         toAccount,
         amount,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       }),
     },
     token

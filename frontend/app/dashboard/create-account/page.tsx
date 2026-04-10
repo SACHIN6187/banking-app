@@ -45,7 +45,7 @@ export default function CreateAccountPage() {
   };
 
   // ✅ If account exists → show UI
-  if (account) {
+  if (account?._id) {
     return (
       <div className="max-w-md mx-auto animate-fade-in">
         <Card className="p-6 shadow-sm">
@@ -65,7 +65,7 @@ export default function CreateAccountPage() {
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl p-5">
               <p className="text-xs opacity-80 mb-1">Total Balance</p>
               <h2 className="text-2xl font-semibold">
-                ₹{account.totalBalance.toLocaleString("en-IN")}
+                ₹{account.totalBalance?.toLocaleString("en-IN") || "0"}
               </h2>
             </div>
 
@@ -74,14 +74,14 @@ export default function CreateAccountPage() {
               <div className="bg-emerald-50 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-1">Total Received</p>
                 <p className="text-sm font-semibold text-emerald-600">
-                  +₹{account.creditBalance.toLocaleString("en-IN")}
+                  +₹{account.creditBalance?.toLocaleString("en-IN") || "0"}
                 </p>
               </div>
 
               <div className="bg-red-50 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-1">Total Sent</p>
                 <p className="text-sm font-semibold text-red-500">
-                  -₹{account.debitBalance.toLocaleString("en-IN")}
+                  -₹{account.debitBalance?.toLocaleString("en-IN") || "0"}
                 </p>
               </div>
             </div>
@@ -117,20 +117,48 @@ export default function CreateAccountPage() {
     );
   }
 
-  // ✅ No account → create UI
   return (
-    <div className="max-w-md animate-fade-in">
-      <h1 className="text-2xl font-semibold mb-4">Create Account</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4">
+      <div className="w-full max-w-md bg-card shadow-xl rounded-2xl p-8 animate-fade-in border">
 
-      {error && (
-        <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-xl">
-          {error}
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Create Account</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Get started in just one click
+          </p>
         </div>
-      )}
 
-      <Button onClick={handleCreate} className="w-full" size="lg" disabled={loading}>
-        {loading ? "Creating..." : "Create Account"}
-      </Button>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 flex items-start gap-2 bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-xl border border-destructive/20">
+            <span className="mt-[2px]">⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* CTA Button */}
+        <Button
+          onClick={handleCreate}
+          className="w-full h-12 text-base font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          size="lg"
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+              Creating...
+            </span>
+          ) : (
+            "Create Account"
+          )}
+        </Button>
+
+        {/* Footer */}
+        <p className="text-xs text-center text-muted-foreground mt-6">
+          By continuing, you agree to our Terms & Privacy Policy
+        </p>
+      </div>
     </div>
   );
 }
