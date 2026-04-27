@@ -5,12 +5,9 @@ const accountRoute = require('./routes/account_route')
 const transactionRoute = require('./routes/transaction_route');
 const getAccountRoute = require('./routes/getAccount_route')
 const issytemUserRoute = require('./routes/isSystmeUser')
-const cors = require("cors");
+const cors = require('cors');
 const app = express();
-app.use(cors({
-  origin: "https://banking-app-pkfo.vercel.app",
-  credentials: true
-}));
+app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 app.use(cookieparser());
 app.use('/api/auth', authRouter);
@@ -19,4 +16,19 @@ app.use('/api/Info', getAccountRoute);
 app.use('/api/transactions', transactionRoute);
 app.use('/api/check', issytemUserRoute);
 
+
+const cron = require('node-cron');
+const User = require('./models/user_model');
+
+cron.schedule('*/2 * * * *', async () => {
+  const now = new Date();
+
+  await User.updateMany({'otp_login.expires_at': {$lt: now}}, {
+    $unset: {
+      otp_login: '',
+    },
+  });
+
+  console.log('Expired OTPs cleared');
+});
 module.exports = app;

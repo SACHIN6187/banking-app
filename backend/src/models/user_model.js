@@ -24,17 +24,30 @@ const userSchema = new mongoose.Schema(
         minlength: [8, 'Password must be of atleast 8 characters'],
         select: false,
       },
-      systemUser:{
+      systemUser:
+          {type: Boolean, default: false, immutable: true, select: false},
+      otp_login: {
+        otp_hash: {
+          type: String,
+        },
+        expires_at: {
+          type: Date,
+        },
+        is_used: {
+          type: Boolean,
+          default: false,
+        }
+      },
+      is_verified: {
         type: Boolean,
         default: false,
-        immutable: true,
-        select: false
       }
     },
+
     {timestamps: true});
 
 userSchema.pre('save', async function() {
-  if (!this.isModified('password')) return ;
+  if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
 });
 

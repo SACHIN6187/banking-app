@@ -62,9 +62,17 @@ async function sendCreditEmail(userEmail, name, amount) {
   await sendEmail(userEmail, SUBJECT, TEXT);
 }
 
+async function sendOtpMail(userEmail, OTP) {
+  const SUBJECT = ' OTP validation - SafeBank';
+  const TEXT = `Hi , Your OTP for sign up is ${OTP}
+      Best regards,
+      The SafeBank Team`;
 
+  await sendEmail(userEmail, SUBJECT, TEXT);
+}
 
 module.exports = {
+  sendOtpMail,
   sendRegistrationEmail,
   sendDebitEmail,
   sendCreditEmail

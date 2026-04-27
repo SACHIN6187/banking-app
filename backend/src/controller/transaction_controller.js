@@ -20,12 +20,10 @@ async function transactionController(req, res) {
     accountModel.findOne({_id: toAccount}).populate('user'),
   ]);
 
-  // ✅ Fix 1: check the documents directly
   if (!fromUserAccount || !toUserAccount) {
     return res.status(400).json({message: 'Invalid account number'});
   }
 
-  // validate idempotencyKey
   const isUnique = await transactionModel.findOne({idempotencyKey});
   if (isUnique) {
     const statusMessages = {
@@ -46,14 +44,12 @@ async function transactionController(req, res) {
 
 
   const {totalBalance} = await fromUserAccount.getBalanceDetails();
-  console.log(totalBalance);
   if (Number(amount) > totalBalance) {
     return res.status(400).json({message: 'Insufficient balance'});
   }
 
   const session = await mongoose.startSession();
   session.startTransaction();
-
   try {
     // ✅ Fix 2: use fromUserAccount._id and toUserAccount._id
     const transaction = await transactionModel.create(
