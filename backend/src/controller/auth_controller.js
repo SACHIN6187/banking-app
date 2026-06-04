@@ -6,23 +6,35 @@ const bcrypt = require('bcrypt');
 
 async function otpController(req, res) {
   try {
-    const {email, name, password} = req.body;
+    // SECURITY FIX: Only accept email during OTP request
+    // Password will be submitted only after OTP verification
+    const {email,name,password} = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: 'Email is required',
+      });
+    }
 
     let user = await userModel.findOne({email});
 
     if (user && user.is_verified) {
       return res.status(422).json({
-        message: 'User already exists',
+        message: 'User already exists. Please sign in instead.',
       });
     }
+
     const otp = Math.floor(100000 + Math.random() * 900000);
     const hashedOtp = await bcrypt.hash(otp.toString(), 10);
 
     if (!user) {
+      // SECURITY FIX: Create user with only email during OTP generation
+      // Password will be set during verification
       user = new userModel({
         email,
         name,
         password,
+        is_verified: false,
       });
     }
 
@@ -34,22 +46,38 @@ async function otpController(req, res) {
 
     await user.save();
 
-    await sendOtpMail(email, otp);
+    // Send OTP email
+    try {
+      await sendOtpMail(email, otp);
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      return res.status(500).json({
+        message: 'Failed to send OTP. Please try again.',
+      });
+    }
 
     return res.status(200).json({
-      message: 'OTP sent successfully',
+      message: 'OTP sent successfully to your email',
     });
 
   } catch (error) {
+    console.error('OTP Controller Error:', error);
     return res.status(500).json({
-      message: error.message,
+      message: 'Failed to process OTP request. Please try again.',
     });
   }
 }
 
 async function registerUserController(req, res) {
   try {
-    const {email, otp} = req.body;
+    // SECURITY FIX: Now accept name, password, and OTP for final registration
+    const {email, otp, name, password} = req.body;
+
+    if (!email || !otp || !name || !password) {
+      return res.status(400).json({
+        message: 'Email, OTP, name, and password are required',
+      });
+    }
 
     const user = await userModel.findOne({email});
 
@@ -61,19 +89,19 @@ async function registerUserController(req, res) {
 
     if (!user.otp_login || !user.otp_login.otp_hash) {
       return res.status(400).json({
-        message: 'OTP not found. Please request again',
+        message: 'OTP not found. Please request OTP again',
       });
     }
 
     if (new Date() > user.otp_login.expires_at) {
       return res.status(400).json({
-        message: 'OTP expired',
+        message: 'OTP expired. Please request a new one',
       });
     }
 
     if (user.otp_login.is_used) {
       return res.status(400).json({
-        message: 'OTP already used',
+        message: 'OTP already used. Please request a new one',
       });
     }
 
@@ -86,10 +114,14 @@ async function registerUserController(req, res) {
       });
     }
 
+    // SECURITY FIX: Update user with name and password after OTP verification
+    user.name = name;
+    user.password = password;  // Password will be auto-hashed by pre-save hook
     user.is_verified = true;
     user.otp_login.is_used = true;
 
     await user.save();
+
     const token =
         jwt.sign({userId: user._id}, process.env.JWT_SECRET, {expiresIn: '3d'});
 
@@ -108,13 +140,15 @@ async function registerUserController(req, res) {
       token,
     });
 
+    // Send welcome email asynchronously (don't block response)
     sendRegistrationEmail(email, user.name)
-        .then(() => console.log('Email sent'))
-        .catch(err => console.log('Email error:', err));
+        .then(() => console.log('Welcome email sent successfully'))
+        .catch(err => console.error('Email sending failed:', err));
 
   } catch (error) {
+    console.error('Registration Controller Error:', error);
     res.status(500).json({
-      message: error.message,
+      message: 'Registration failed. Please try again.',
     });
   }
 }

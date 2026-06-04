@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveAuth(token, user);
     setToken(token);
     setUser(user);
-
     try {
       const res = await getAccountApi(token);
       setAccount(res.account || res); // instant availability

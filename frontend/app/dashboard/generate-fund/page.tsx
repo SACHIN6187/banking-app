@@ -21,7 +21,7 @@ export default function GenerateFundPage() {
             .then((res) => setIsSystemUser(res.isSystemUser))
             .catch(() => setIsSystemUser(false));
     }, [token]);
-    
+
     if (!isSystemUser) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -36,7 +36,6 @@ export default function GenerateFundPage() {
 
         try {
             await generateFundApi(token!, account!._id, Number(amount));
-            setSuccess(true);
             setAmount("");
         } catch (err: any) {
             setError(err.message || "Something went wrong");

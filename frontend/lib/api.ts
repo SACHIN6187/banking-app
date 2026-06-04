@@ -1,14 +1,25 @@
-const BASE_URL = "https://banking-app-5mlp.onrender.com/api";
+const BASE_URL = "http://localhost:3000/api";
+
 async function apiFetch(path: string, options: RequestInit = {}, token?: string) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers,credentials: "include", });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Something went wrong");
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
+
+  const contentType = res.headers.get("content-type");
+  const data = contentType?.includes("application/json")
+    ? await res.json()
+    : null;
+
+  if (!res.ok) throw new Error(data?.message || "Something went wrong");
   return data;
 }
 
@@ -19,10 +30,18 @@ export async function loginApi(email: string, password: string) {
   });
 }
 
-export async function registerApi(name: string, email: string, password: string) {
+export async function sendRegisterOtpApi( email: string,name: string , password:string) {
+  return apiFetch("/auth/register/otp", {
+    method: "POST",
+    body: JSON.stringify({ email,name,password }),
+  });
+}
+
+// SECURITY FIX: Now send name, password, and OTP during verification
+export async function verifyRegisterOtpApi(email: string, otp: string, name: string, password: string) {
   return apiFetch("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ email, otp, name, password }),
   });
 }
 
@@ -31,10 +50,10 @@ export async function getAccountApi(token: string) {
   return apiFetch("/Info", { method: "GET" }, token);
 }
 
-// lib/api.ts
 export async function checkSystemUserApi(token: string) {
   return apiFetch("/check", { method: "GET" }, token);
 }
+
 export async function createAccountApi(token: string) {
   return apiFetch("/accounts", { method: "POST" }, token);
 }
@@ -42,6 +61,7 @@ export async function createAccountApi(token: string) {
 export async function getTransactionsApi(token: string) {
   return apiFetch("/transactions", { method: "GET" }, token);
 }
+
 export async function generateFundApi(
   token: string,
   toAccount: string,

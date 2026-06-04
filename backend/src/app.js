@@ -7,7 +7,10 @@ const getAccountRoute = require('./routes/getAccount_route')
 const issytemUserRoute = require('./routes/isSystmeUser')
 const cors = require('cors');
 const app = express();
-app.use(cors({origin: true, credentials: true}));
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://192.168.1.112:5173'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieparser());
 app.use('/api/auth', authRouter);
@@ -15,7 +18,6 @@ app.use('/api/accounts', accountRoute);
 app.use('/api/Info', getAccountRoute);
 app.use('/api/transactions', transactionRoute);
 app.use('/api/check', issytemUserRoute);
-
 
 const cron = require('node-cron');
 const User = require('./models/user_model');
