@@ -11,6 +11,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+await transporter.verify();
+console.log("SMTP connection successful");
 
 const sendEmail = async (to, subject, text) => {
   try {
