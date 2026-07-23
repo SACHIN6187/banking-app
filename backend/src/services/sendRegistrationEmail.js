@@ -1,27 +1,38 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST, // e.g. smtp.gmail.com
+  port: Number(process.env.SMTP_PORT), // 587 or 465
+  secure: process.env.SMTP_PORT == 465, // true for 465, false for 587
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
 
 async function sendEmail(to, subject, text) {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is missing");
+    if (
+      !process.env.SMTP_HOST ||
+      !process.env.SMTP_PORT ||
+      !process.env.SMTP_EMAIL ||
+      !process.env.SMTP_PASSWORD
+    ) {
+      throw new Error("SMTP configuration is missing");
     }
 
-    const response = await resend.emails.send({
-      from: "onboarding@resend.dev", // change after domain verification
+    const info = await transporter.sendMail({
+      from: `"Vault Banking" <${process.env.SMTP_EMAIL}>`,
       to,
       subject,
       text,
     });
 
-    console.log("Email sent successfully:", response);
-    return response;
+    console.log("Email sent successfully:", info.messageId);
+    return info;
   } catch (error) {
     console.error("Email sending failed:", error);
-    throw new Error(
-      error.message || "Failed to send email"
-    );
+    throw new Error(error.message || "Failed to send email");
   }
 }
 
@@ -114,7 +125,7 @@ This OTP will expire in 5 minutes.
 IMPORTANT SECURITY REMINDERS:
 - Never share your OTP with anyone
 - Bank staff will never ask for your OTP or password
-- If you didn't request this OTP, please ignore this email
+- If you didn't request this OTP, please ignore this email.
 
 Best regards,
 The Vault Banking Team`;
