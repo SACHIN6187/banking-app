@@ -1,26 +1,55 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // e.g. smtp.gmail.com
-  port: Number(process.env.SMTP_PORT), // 587 or 465
-  secure: process.env.SMTP_PORT == 465, // true for 465, false for 587
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for 587
+  requireTLS: Number(process.env.SMTP_PORT) === 587,
+
   auth: {
     user: process.env.SMTP_EMAIL,
     pass: process.env.SMTP_PASSWORD,
   },
+
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+
+  logger: true,
+  debug: true,
+});
+
+// Verify SMTP connection when the server starts
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP VERIFY FAILED");
+    console.error(error);
+  } else {
+    console.log("SMTP SERVER IS READY");
+  }
 });
 
 async function sendEmail(to, subject, text) {
   try {
-     console.log('sending email for otp');
+    console.log("========== SMTP CONFIG ==========");
+    console.log({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: Number(process.env.SMTP_PORT) === 465,
+      email: process.env.SMTP_EMAIL,
+    });
+    console.log("=================================");
+
     if (
       !process.env.SMTP_HOST ||
       !process.env.SMTP_PORT ||
       !process.env.SMTP_EMAIL ||
       !process.env.SMTP_PASSWORD
     ) {
-      throw new Error("SMTP configuration is missing");
+      throw new Error("SMTP configuration is missing.");
     }
+
+    console.log(`Sending email to ${to}...`);
 
     const info = await transporter.sendMail({
       from: `"Vault Banking" <${process.env.SMTP_EMAIL}>`,
@@ -29,14 +58,23 @@ async function sendEmail(to, subject, text) {
       text,
     });
 
-    console.log("Email sent successfully:", info.messageId);
-    
+    console.log("Email sent successfully.");
+    console.log(info);
+
     return info;
-  } catch (error) {
-    console.error("Email sending failed:", error);
-    throw new Error(error.message || "Failed to send email");
+  } catch (err) {
+    console.error("========== EMAIL ERROR ==========");
+    console.error("Message :", err.message);
+    console.error("Code    :", err.code);
+    console.error("Command :", err.command);
+    console.error("Stack   :", err.stack);
+    console.error("=================================");
+
+    throw err;
   }
 }
+
+
 
 async function sendRegistrationEmail(userEmail, name) {
   const SUBJECT =
