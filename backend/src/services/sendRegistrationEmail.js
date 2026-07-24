@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
 
 async function sendEmail(to, subject, text) {
   try {
+     console.log('sending email for otp');
     if (
       !process.env.SMTP_HOST ||
       !process.env.SMTP_PORT ||
@@ -29,6 +30,7 @@ async function sendEmail(to, subject, text) {
     });
 
     console.log("Email sent successfully:", info.messageId);
+    
     return info;
   } catch (error) {
     console.error("Email sending failed:", error);
@@ -115,6 +117,7 @@ The Vault Banking Team`;
 }
 
 async function sendOtpMail(userEmail, OTP) {
+  console.log('request reach to backend and fucntion successfully');
   const SUBJECT =
     "Your OTP for Account Verification - Vault Banking";
 
