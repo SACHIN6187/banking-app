@@ -31,6 +31,7 @@ export async function loginApi(email: string, password: string) {
 }
 
 export async function sendRegisterOtpApi( email: string,name: string , password:string) {
+  console.log("API call from frontend");
   return apiFetch("/auth/register/otp", {
     method: "POST",
     body: JSON.stringify({ email,name,password }),
