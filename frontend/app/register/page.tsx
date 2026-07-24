@@ -30,6 +30,7 @@ export default function RegisterPage() {
     try {
       if (!otpSent) {
         // SECURITY FIX: Only send email during OTP request
+        console.log("otp sent from frontend");
         await sendRegisterOtpApi(form.email, form.name, form.password);
         setOtpSent(true);
         setMessage("OTP sent to your email. Please enter it below.");
