@@ -22,7 +22,7 @@ export default function DashboardPage() {
     } else {
       setTransactions([]);
     }
-  }, [token]);
+  }, [account?.transactions]);
 
 
   const isDebit = (tx: any) =>
