@@ -46,7 +46,16 @@ export async function verifyRegisterOtpApi(email: string, otp: string, name: str
 
 // ─── Account ─────────────────────────────────────────────────────
 export async function getAccountApi(token: string) {
-  return apiFetch("/Info", { method: "GET" }, token);
+  const response = await apiFetch("/Info", { method: "GET" }, token);
+  if (!response.account) return response;
+
+  return {
+    ...response,
+    account: {
+      ...response.account,
+      status: response.account.Status,
+    },
+  };
 }
 
 export async function checkSystemUserApi(token: string) {
@@ -55,10 +64,6 @@ export async function checkSystemUserApi(token: string) {
 
 export async function createAccountApi(token: string) {
   return apiFetch("/accounts", { method: "POST" }, token);
-}
-
-export async function getTransactionsApi(token: string) {
-  return apiFetch("/transactions", { method: "GET" }, token);
 }
 
 export async function generateFundApi(

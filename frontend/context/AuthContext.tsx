@@ -27,7 +27,7 @@ interface Account {
   debitBalance: number;
   totalBalance: number;
   transactions: Ledger[];
-  Status: string | null;
+  status: string | null;
 }
 
 interface User {
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     getAccountApi(token)
-      .then((res) => setAccount(res.account || res))
+      .then((res) => setAccount(res.account))
       .catch(() => setAccount(null));
   }, [token]);
 
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
     try {
       const res = await getAccountApi(token);
-      setAccount(res.account || res); // instant availability
+      setAccount(res.account); // instant availability
     } catch { }
 
     router.push("/dashboard");
