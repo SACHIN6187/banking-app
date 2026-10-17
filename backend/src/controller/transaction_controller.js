@@ -2,6 +2,8 @@ const {mongoose} = require('mongoose');
 const accountModel = require('../models/account_modal')
 const transactionModel = require('../models/transaction_modal')
 const Ledger = require('../models/ledger_modal')
+const {invalidateBalance, invalidateTransaction} =
+    require('../services/cache_service');
 
 const {sendDebitEmail, sendCreditEmail} =
     require('../services/sendRegistrationEmail');
@@ -89,6 +91,16 @@ async function transactionController(req, res) {
 
     await session.commitTransaction();
 
+    const affectedAccounts = [
+      fromUserAccount._id.toString(),
+      toUserAccount._id.toString(),
+    ];
+    await Promise.all(affectedAccounts.flatMap(
+        (accountId) =>
+            [invalidateBalance(accountId),
+             invalidateTransaction(accountId),
+    ]));
+
     sendDebitEmail(fromUserAccount.user.email, toUserAccount.user.name, amount);
     sendCreditEmail(
         toUserAccount.user.email, fromUserAccount.user.name, amount);
@@ -167,6 +179,12 @@ async function createInitialFundsTransaction(req, res) {
 
     await session.commitTransaction();
     session.endSession();
+
+    const accountId = toAccount.toString();
+    await Promise.all([
+      invalidateBalance(accountId),
+      invalidateTransaction(accountId),
+    ]);
 
 
     return res.status(201).json({

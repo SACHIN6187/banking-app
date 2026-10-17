@@ -23,6 +23,10 @@ class Cache {
 
     return entry.value;
   }
+
+  remove(accountNo) {
+    this.data.delete(accountNo);
+  }
 }
 
 const myCache = new Cache();
@@ -60,6 +64,9 @@ const server = net.createServer((socket) => {
 
       myCache.insert(accountNo, amount);
       socket.end('OK');
+    } else if (command === 'DELETE' && parts.length === 2) {
+      myCache.remove(parts[1]);
+      socket.end('OK');
     } else {
       socket.end('ERROR');
     }
@@ -70,6 +77,6 @@ const server = net.createServer((socket) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`Cache server running on port ${PORT}...`);
 });

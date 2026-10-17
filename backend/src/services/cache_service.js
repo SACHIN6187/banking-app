@@ -86,6 +86,28 @@ async function set(accountNo, balance) {
   }
 }
 
+async function invalidateCacheEntry(accountNo, port, cacheType) {
+  try {
+    const response = await sendCommand(`DELETE ${accountNo}\n`, port);
+    if (response !== 'OK') {
+      console.error(`${cacheType} cache delete error:`, response);
+    }
+  } catch (error) {
+    console.error(
+        `${cacheType} cache delete error:`,
+        error && error.message ? error.message : error);
+  }
+}
+
+async function invalidateBalance(accountNo) {
+  await invalidateCacheEntry(accountNo, PORT, 'Balance');
+}
+
+async function invalidateTransaction(accountNo) {
+  await invalidateCacheEntry(
+      `${accountNo}:transactions`, TRANSACTION_PORT, 'Transaction');
+}
+
 async function getTransaction(accountNo) {
   try {
     const response =
@@ -121,5 +143,7 @@ module.exports = {
   get,
   set,
   getTransaction,
-  setTransaction
+  setTransaction,
+  invalidateBalance,
+  invalidateTransaction
 };

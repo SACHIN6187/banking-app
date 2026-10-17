@@ -21,6 +21,10 @@ class CacheTransaction {
 
     return entry.value;
   }
+
+  remove(accountNo) {
+    this.data.delete(accountNo);
+  }
 }
 
 const myCache = new CacheTransaction();
@@ -32,27 +36,33 @@ const server = net.createServer((socket) => {
   socket.on('data', (chunk) => {
     buffer += chunk.toString();
 
-    if (!buffer.includes('\n')) return;
+    let newlineIndex;
+    while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+      const request = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+      if (!request) continue;
 
-    const request = buffer.trim();
-    buffer = '';
+      const parts = request.match(/^(\S+)\s+(\S+)(?:\s+([\s\S]+))?$/);
+      const command = parts?.[1];
+      const accountNo = parts?.[2];
+      const detail = parts?.[3];
 
-    const parts = request.match(/^(\S+)\s+(\S+)(?:\s+([\s\S]+))?$/);
-    const command = parts?.[1];
-    const accountNo = parts?.[2];
-    const detail = parts?.[3];
-
-    if (command === 'GET' && detail === undefined) {
-      const result = myCache.search(accountNo);
-      socket.end(result + '\n');
-
-    } else if (command === 'SET' && detail !== undefined) {
-      myCache.insert(accountNo, detail);
-      socket.end('OK\n');
-
-    } else {
-      socket.end('ERROR\n');
+      if (command === 'GET' && detail === undefined) {
+        socket.write(`${myCache.search(accountNo)}\n`);
+      } else if (command === 'SET' && detail !== undefined) {
+        myCache.insert(accountNo, detail);
+        socket.write('OK\n');
+      } else if (command === 'DELETE' && detail === undefined) {
+        myCache.remove(accountNo);
+        socket.write('OK\n');
+      } else {
+        socket.write('ERROR\n');
+      }
     }
+  });
+
+  socket.on('end', () => {
+    socket.end();
   });
 
   socket.on('error', (err) => {
@@ -60,6 +70,6 @@ const server = net.createServer((socket) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`Cache server running on port ${PORT}...`);
 });
