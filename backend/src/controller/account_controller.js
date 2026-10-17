@@ -1,6 +1,7 @@
 const accountModal = require('../models/account_modal');
 const ledger_model = require('../models/ledger_modal');
-const {get, set} = require('../services/cache_service');
+const {get, set, getTransaction, setTransaction} =
+    require('../services/cache_service');
 
 
 async function createAccount(req, res) {
@@ -38,12 +39,17 @@ async function getAccountInfo(req, res) {
     const Status = account.status || null;
     const accountId = account._id.toString();
     const cachedBalance = await get(accountId);
+    let transactions = await getTransaction(accountId);
+    if (!Array.isArray(transactions)) {
+      transactions = await ledger_model.find({account: account._id})
+                         .populate('transaction');
 
-
+      transactions = transactions || [];
+      await setTransaction(accountId, transactions);
+    }
     if (cachedBalance !== -1) {
       totalBalance = cachedBalance;
     } else {
-      const transactions = await ledger_model.find({account: account._id});
       for (const tx of transactions) {
         if (tx.type === 'Credit') {
           creditBalance += tx.amount;
@@ -55,8 +61,7 @@ async function getAccountInfo(req, res) {
       totalBalance = creditBalance - debitBalance;
       await set(accountId, totalBalance);
     }
-    const transactions =
-        await ledger_model.find({account: account._id}).populate('transaction');
+
 
     creditBalance = 0;
     debitBalance = 0;

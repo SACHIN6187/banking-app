@@ -3,6 +3,7 @@ const app = require('./src/app');
 const connectToDb = require('./src/config/db');
 require('./src/controller/rate_limiter_controller');
 require('./src/controller/cache_server_controller');
+require('./src/controller/transaction_cache');
 
 
 connectToDb();

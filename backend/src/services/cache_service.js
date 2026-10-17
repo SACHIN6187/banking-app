@@ -2,8 +2,9 @@ const net = require('net');
 
 const HOST = (process.env.HOST_IP || '127.0.0.1').trim();
 const PORT = Number(process.env.CACHE_PORT);
+const TRANSACTION_PORT = Number(process.env.TRANSACTION_CACHE_PORT || 6303);
 
-function sendCommand(command, timeout = 2000) {
+function sendCommand(command, port = PORT, timeout = 2000) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket();
     let response = '';
@@ -25,7 +26,7 @@ function sendCommand(command, timeout = 2000) {
       }
     });
 
-    client.connect(PORT, HOST, () => {
+    client.connect(port, HOST, () => {
       client.write(command);
     });
 
@@ -85,7 +86,40 @@ async function set(accountNo, balance) {
   }
 }
 
+async function getTransaction(accountNo) {
+  try {
+    const response =
+        await sendCommand(`GET ${accountNo}:transactions\n`, TRANSACTION_PORT);
+
+    if (!response || response === 'NOT_FOUND' || response === 'ERROR') {
+      return null;
+    }
+
+    return JSON.parse(response);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function setTransaction(accountNo, detail) {
+  try {
+    const json = JSON.stringify(detail);
+
+    const response = await sendCommand(
+        `SET ${accountNo}:transactions ${json}\n`, TRANSACTION_PORT);
+
+    if (response !== 'OK') {
+      console.error('Transaction cache set error:', response);
+    }
+  } catch (error) {
+    console.error('Transaction cache set error:', error.message);
+  }
+}
+
+
 module.exports = {
   get,
-  set
+  set,
+  getTransaction,
+  setTransaction
 };
