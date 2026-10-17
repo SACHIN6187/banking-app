@@ -109,7 +109,7 @@ export default function CreateAccountPage() {
             {/* Status */}
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Status</span>
-              <Badge variant="success">{account.Status}</Badge>
+              <Badge variant="success">{account.status}</Badge>
             </div>
           </CardContent>
         </Card>
