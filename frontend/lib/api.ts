@@ -19,7 +19,18 @@ async function apiFetch(path: string, options: RequestInit = {}, token?: string)
     ? await res.json()
     : null;
 
-  if (!res.ok) throw new Error(data?.message || "Something went wrong");
+  
+  if (!res.ok) {
+    const message = data?.message || "Something went wrong";
+
+    if (res.status === 429) {
+      toast.error(message, {
+        description: "Please wait before trying again.",
+      });
+    }
+
+    throw new Error(message);
+  }
   return data;
 }
 
