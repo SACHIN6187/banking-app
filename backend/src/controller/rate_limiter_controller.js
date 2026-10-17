@@ -34,8 +34,6 @@ const limiter = new RateLimiter();
 const port = Number(process.env.RATE_LIMITER_PORT);
 
 const server = net.createServer((clientSocket) => {
-  console.log('Client connected to rate limiter');
-
   let request = '';
 
   clientSocket.on('data', (buffer) => {

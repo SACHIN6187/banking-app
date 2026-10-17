@@ -21,10 +21,6 @@ class CacheTransaction {
 
     return entry.value;
   }
-
-  remove(accountNo) {
-    this.data.delete(accountNo);
-  }
 }
 
 const myCache = new CacheTransaction();
@@ -51,9 +47,6 @@ const server = net.createServer((socket) => {
         socket.write(`${myCache.search(accountNo)}\n`);
       } else if (command === 'SET' && detail !== undefined) {
         myCache.insert(accountNo, detail);
-        socket.write('OK\n');
-      } else if (command === 'DELETE' && detail === undefined) {
-        myCache.remove(accountNo);
         socket.write('OK\n');
       } else {
         socket.write('ERROR\n');

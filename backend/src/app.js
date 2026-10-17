@@ -28,7 +28,5 @@ cron.schedule('*/2 * * * *', async () => {
       otp_login: '',
     },
   });
-
-  console.log('Expired OTPs cleared');
 });
 module.exports = app;

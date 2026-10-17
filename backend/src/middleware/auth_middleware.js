@@ -15,7 +15,7 @@ async function authMiddleware(req, res, next) {
   try {
     const result = await rate_check(token);
     if (result === 'RATE_LIMIT_EXCEEDED') {
-      console.log('too many requests');
+      console.warn('Request rate limit exceeded');
       return res.status(429).json({
         message: 'Exceeded request limit',
       });
@@ -56,7 +56,7 @@ async function intialFundtransactionMiddleware(req, res, next) {
       })
     }
     if (result === -1) {
-      console.log('Rate limiter unavailable');
+      console.error('Rate limiter unavailable');
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user =

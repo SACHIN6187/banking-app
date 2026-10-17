@@ -12,11 +12,10 @@ function connectToDb() {
               otp_login: '',
             },
           });
-          console.log('Expired OTPs cleared');
         });
       })
       .catch(err => {
-        console.log('error while connecting', err);
+        console.error('error while connecting', err);
         process.exit(1);
       });
 }

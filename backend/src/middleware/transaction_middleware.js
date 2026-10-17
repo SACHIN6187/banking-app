@@ -15,7 +15,7 @@ async function transactionMiddleware(req, res, next) {
   try {
     const result = await rate_check(token);
     if (result === 'RATE_LIMIT_EXCEEDED') {
-      console.log('too many requests');
+      console.warn('Request rate limit exceeded');
       return res.status(429).json({
         message: 'Exceeded request limit',
       });

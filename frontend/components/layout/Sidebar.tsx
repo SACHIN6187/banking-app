@@ -16,7 +16,7 @@ export default function Sidebar() {
     if (!token) return;
 
     checkSystemUserApi(token)
-      .then((res) => { console.log("SYSTEM USER RESPONSE:", res.isSystemUser); setIsSystemUser(res.isSystemUser) })
+      .then((res) => setIsSystemUser(res.isSystemUser))
       .catch(() => setIsSystemUser(false));
 
   }, [token]);

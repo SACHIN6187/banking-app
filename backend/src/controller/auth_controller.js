@@ -8,7 +8,7 @@ async function otpController(req, res) {
   try {
     // SECURITY FIX: Only accept email during OTP request
     // Password will be submitted only after OTP verification
-    const {email,name,password} = req.body;
+    const {email, name, password} = req.body;
 
     if (!email) {
       return res.status(400).json({
@@ -142,7 +142,6 @@ async function registerUserController(req, res) {
 
     // Send welcome email asynchronously (don't block response)
     sendRegistrationEmail(email, user.name)
-        .then(() => console.log('Welcome email sent successfully'))
         .catch(err => console.error('Email sending failed:', err));
 
   } catch (error) {

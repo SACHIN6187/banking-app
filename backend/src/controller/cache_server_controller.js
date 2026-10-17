@@ -23,18 +23,12 @@ class Cache {
 
     return entry.value;
   }
-
-  remove(accountNo) {
-    this.data.delete(accountNo);
-  }
 }
 
 const myCache = new Cache();
 const PORT = process.env.CACHE_PORT;
 
 const server = net.createServer((socket) => {
-  console.log('Client connected!');
-
   let buffer = '';
 
   socket.on('data', (chunk) => {
@@ -44,8 +38,6 @@ const server = net.createServer((socket) => {
 
     const request = buffer.trim();
     buffer = '';
-
-    console.log('Received:', request);
 
     const parts = request.split(/\s+/);
     const command = parts[0];
@@ -63,9 +55,6 @@ const server = net.createServer((socket) => {
       }
 
       myCache.insert(accountNo, amount);
-      socket.end('OK');
-    } else if (command === 'DELETE' && parts.length === 2) {
-      myCache.remove(parts[1]);
       socket.end('OK');
     } else {
       socket.end('ERROR');
